@@ -1,0 +1,22 @@
+{
+  "en": {
+    "nav.boards": "Boards",
+    "nav.contacts": "Contacts",
+    "nav.users": "Users",
+    "nav.settings": "Settings",
+    "action.save": "Save",
+    "action.cancel": "Cancel",
+    "record.create": "Create record",
+    "stage.move.blocked": "This move is not allowed."
+  },
+  "ar": {
+    "nav.boards": "اللوحات",
+    "nav.contacts": "جهات الاتصال",
+    "nav.users": "المستخدمون",
+    "nav.settings": "الإعدادات",
+    "action.save": "حفظ",
+    "action.cancel": "إلغاء",
+    "record.create": "إنشاء سجل",
+    "stage.move.blocked": "هذه الحركة غير مسموح بها."
+  }
+}

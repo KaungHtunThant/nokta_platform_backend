@@ -1,0 +1,22 @@
+/vendor
+/node_modules
+/public/build
+/public/hot
+/storage/*.key
+/.env
+/.env.backup
+/.phpunit.cache
+.phpunit.result.cache
+/auth.json
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/.idea
+/.vscode
+/.fleet
+_ide_helper.php
+_ide_helper_models.php
+.DS_Store
+
+# Commit the lockfile (dependency hygiene): composer.lock is NOT ignored.

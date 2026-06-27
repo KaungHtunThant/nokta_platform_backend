@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Validate composer (one version per package; lockfile committed)
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Lint (Pint)
+        run: composer lint
+
+      - name: Static analysis (Larastan, strict typing)
+        run: composer analyse
+
+      - name: Security audit
+        run: composer audit
+
+      - name: Tests (Pest — unit, feature, arch)
+        run: composer test

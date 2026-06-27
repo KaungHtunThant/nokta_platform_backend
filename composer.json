@@ -1,0 +1,68 @@
+{
+    "name": "nokta/platform-backend",
+    "type": "project",
+    "description": "Nokta configurable CRM + EMR platform — API backend (Laravel 11). MVC + SOLID + TDD.",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^11.31",
+        "laravel/sanctum": "^4.0",
+        "laravel/reverb": "^1.0",
+        "laravel/scout": "^10.11",
+        "laravel/tinker": "^2.9",
+        "spatie/laravel-permission": "^6.10",
+        "spatie/laravel-translatable": "^6.11",
+        "spatie/laravel-data": "^4.11",
+        "spatie/laravel-medialibrary": "^11.12",
+        "owen-it/laravel-auditing": "^14.0",
+        "predis/predis": "^2.2",
+        "meilisearch/meilisearch-php": "^1.11",
+        "maatwebsite/excel": "^3.1",
+        "giggsey/libphonenumber-for-php": "^8.0",
+        "twilio/sdk": "^8.4"
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.5",
+        "pestphp/pest-plugin-laravel": "^3.0",
+        "pestphp/pest-plugin-arch": "^3.0",
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.18",
+        "mockery/mockery": "^1.6",
+        "fakerphp/faker": "^1.23"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "test:arch": "pest --group=arch",
+        "analyse": "phpstan analyse",
+        "lint": "pint --test",
+        "format": "pint",
+        "check": [
+            "@lint",
+            "@analyse",
+            "@test"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
