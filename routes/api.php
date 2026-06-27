@@ -3,10 +3,14 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BoardController;
 use App\Http\Controllers\FieldDefinitionController;
 use App\Http\Controllers\LayoutController;
+use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\RecordController;
+use App\Http\Controllers\RecordMoveController;
 use App\Http\Controllers\SchemaController;
+use App\Http\Controllers\StageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -33,4 +37,17 @@ Route::middleware(['auth:sanctum', 'resolve.tenant'])->group(function (): void {
     Route::delete('/records/{record}', [RecordController::class, 'destroy']);
 
     Route::get('/layouts/{surface}/{key}', [LayoutController::class, 'show']);
+
+    // --- Phase 2: pipelines, stages, board, stage moves ---
+    Route::get('/entity-types/{entityTypeKey}/pipelines', [PipelineController::class, 'index']);
+    Route::post('/entity-types/{entityTypeKey}/pipelines', [PipelineController::class, 'store']);
+
+    Route::get('/pipelines/{pipeline}/stages', [StageController::class, 'index']);
+    Route::post('/pipelines/{pipeline}/stages', [StageController::class, 'store']);
+    Route::put('/pipelines/{pipeline}/stages/reorder', [StageController::class, 'reorder']);
+    Route::put('/stages/{stage}', [StageController::class, 'update']);
+    Route::delete('/stages/{stage}', [StageController::class, 'destroy']);
+
+    Route::get('/entity-types/{entityTypeKey}/board', [BoardController::class, 'show']);
+    Route::post('/records/{record}/move', [RecordMoveController::class, 'store']);
 });

@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withBroadcasting(
+        __DIR__.'/../routes/channels.php',
+        ['middleware' => ['auth:sanctum']], // SPA authenticates the /broadcasting/auth route by token
+    )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'resolve.tenant' => ResolveTenant::class,

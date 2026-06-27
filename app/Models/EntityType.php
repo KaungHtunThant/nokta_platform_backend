@@ -29,4 +29,10 @@ class EntityType extends BaseModel
     {
         return $this->hasMany(Record::class);
     }
+
+    /** @return HasMany<Pipeline, $this> */
+    public function pipelines(): HasMany
+    {
+        return $this->hasMany(Pipeline::class)->orderBy('position');
+    }
 }

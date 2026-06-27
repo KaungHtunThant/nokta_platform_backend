@@ -5,7 +5,13 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Contracts\RecordRepositoryInterface;
+use App\Contracts\StageRuleEvaluator;
 use App\Repositories\Eloquent\EloquentRecordRepository;
+use App\Rules\Stage\AllowBackwardRule;
+use App\Rules\Stage\CooldownRule;
+use App\Rules\Stage\RequireCommentRule;
+use App\Rules\Stage\RequireFieldsRule;
+use App\Services\Stages\StageTransitionPolicy;
 use App\Support\Tenancy\TenantManager;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\ServiceProvider;
@@ -19,6 +25,18 @@ class AppServiceProvider extends ServiceProvider
 
         // DIP: depend on the contract; swap implementations freely.
         $this->app->bind(RecordRepositoryInterface::class, EloquentRecordRepository::class);
+
+        // Stage-transition rule evaluators (Strategy). New rule types: add the class + tag it here.
+        $this->app->tag([
+            RequireFieldsRule::class,
+            RequireCommentRule::class,
+            AllowBackwardRule::class,
+            CooldownRule::class,
+        ], 'stage.rules');
+
+        $this->app->when(StageTransitionPolicy::class)
+            ->needs(StageRuleEvaluator::class)
+            ->giveTagged('stage.rules');
     }
 
     public function boot(): void

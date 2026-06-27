@@ -34,4 +34,16 @@ class Record extends BaseModel
     {
         return $this->belongsTo(EntityType::class);
     }
+
+    /** @return BelongsTo<Stage, $this> */
+    public function stage(): BelongsTo
+    {
+        return $this->belongsTo(Stage::class);
+    }
+
+    /** @return BelongsTo<Pipeline, $this> */
+    public function pipeline(): BelongsTo
+    {
+        return $this->belongsTo(Pipeline::class);
+    }
 }
