@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Records\IndexRecordsRequest;
 use App\Http\Requests\Records\StoreRecordRequest;
 use App\Http\Requests\Records\UpdateRecordRequest;
 use App\Http\Resources\RecordResource;
@@ -11,6 +12,7 @@ use App\Models\EntityType;
 use App\Models\Record;
 use App\Models\User;
 use App\Services\Records\FieldGate;
+use App\Services\Records\RecordQueryBuilder;
 use App\Services\Records\RecordWriteService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,17 +29,17 @@ final class RecordController extends Controller
     public function __construct(
         private readonly RecordWriteService $writer,
         private readonly FieldGate $fieldGate,
+        private readonly RecordQueryBuilder $queryBuilder,
     ) {}
 
-    public function index(Request $request, string $entityTypeKey): AnonymousResourceCollection
+    public function index(IndexRecordsRequest $request, string $entityTypeKey): AnonymousResourceCollection
     {
         $type = $this->resolveType($entityTypeKey);
         $this->applyReadableKeys($request, $type);
 
-        $records = Record::query()
-            ->where('entity_type_id', $type->id)
-            ->latest('id')
-            ->paginate(25);
+        $records = $this->queryBuilder
+            ->for($type, $request->filters(), $request->sort())
+            ->paginate($request->perPage());
 
         return RecordResource::collection($records);
     }

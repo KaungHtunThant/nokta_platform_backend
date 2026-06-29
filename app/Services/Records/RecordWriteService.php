@@ -24,29 +24,37 @@ final class RecordWriteService
     public function __construct(
         private readonly RecordRepositoryInterface $records,
         private readonly FieldGate $fieldGate,
+        private readonly FieldProjector $projector,
     ) {}
 
     public function create(EntityType $type, RecordInput $input, ?User $actor = null): Record
     {
-        $attributes = $this->buildAttributes($type, $input, $actor, []);
+        $defs = $type->fieldDefinitions()->get();
+        $attributes = $this->buildAttributes($defs, $input, $actor, []);
         $attributes['entity_type_id'] = $type->id;
 
-        return $this->records->create($attributes);
+        $record = $this->records->create($attributes);
+        $this->projector->sync($record, $defs, $record->data ?? []);
+
+        return $record;
     }
 
     public function update(EntityType $type, Record $record, RecordInput $input, ?User $actor = null): Record
     {
-        return $this->records->update($record, $this->buildAttributes($type, $input, $actor, $record->data ?? []));
+        $defs = $type->fieldDefinitions()->get();
+        $record = $this->records->update($record, $this->buildAttributes($defs, $input, $actor, $record->data ?? []));
+        $this->projector->sync($record, $defs, $record->data ?? []);
+
+        return $record;
     }
 
     /**
+     * @param  Collection<int, FieldDefinition>  $defs
      * @param  array<string, mixed>  $existing  the record's current custom-field bag (empty on create)
      * @return array<string, mixed>
      */
-    private function buildAttributes(EntityType $type, RecordInput $input, ?User $actor, array $existing): array
+    private function buildAttributes($defs, RecordInput $input, ?User $actor, array $existing): array
     {
-        $defs = $type->fieldDefinitions()->get();
-
         // Field-level authorization: drop values the actor may not update BEFORE persist, so a forced
         // payload cannot write a denied field. Null actor (seed/internal) = no gating.
         $incoming = $actor !== null
