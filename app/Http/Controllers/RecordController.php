@@ -9,21 +9,30 @@ use App\Http\Requests\Records\UpdateRecordRequest;
 use App\Http\Resources\RecordResource;
 use App\Models\EntityType;
 use App\Models\Record;
+use App\Models\User;
+use App\Services\Records\FieldGate;
 use App\Services\Records\RecordWriteService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * Thin controller: resolve, delegate to the write service, return a Resource.
- * No business logic, no direct DB access (enforced by tests/Arch).
+ * No business logic, no direct DB access (enforced by tests/Arch). Field-level read/write
+ * authorization is delegated to FieldGate (Phase 3): the actor is passed to the write service,
+ * and readable field keys are stashed on the request for RecordResource to filter on.
  */
 final class RecordController extends Controller
 {
-    public function __construct(private readonly RecordWriteService $writer) {}
+    public function __construct(
+        private readonly RecordWriteService $writer,
+        private readonly FieldGate $fieldGate,
+    ) {}
 
-    public function index(string $entityTypeKey): AnonymousResourceCollection
+    public function index(Request $request, string $entityTypeKey): AnonymousResourceCollection
     {
         $type = $this->resolveType($entityTypeKey);
+        $this->applyReadableKeys($request, $type);
 
         $records = Record::query()
             ->where('entity_type_id', $type->id)
@@ -36,21 +45,29 @@ final class RecordController extends Controller
     public function store(StoreRecordRequest $request, string $entityTypeKey): JsonResponse
     {
         $type = $this->resolveType($entityTypeKey);
-        $record = $this->writer->create($type, $request->toInput());
+        $record = $this->writer->create($type, $request->toInput(), $this->actor($request));
+
+        $this->applyReadableKeys($request, $type);
 
         return RecordResource::make($record->load('entityType'))
             ->response()
             ->setStatusCode(201);
     }
 
-    public function show(Record $record): RecordResource
+    public function show(Request $request, Record $record): RecordResource
     {
+        $type = $record->entityType()->firstOrFail();
+        $this->applyReadableKeys($request, $type);
+
         return RecordResource::make($record->load('entityType'));
     }
 
     public function update(UpdateRecordRequest $request, Record $record): RecordResource
     {
-        $record = $this->writer->update($record->entityType, $record, $request->toInput());
+        $type = $record->entityType()->firstOrFail();
+        $record = $this->writer->update($type, $record, $request->toInput(), $this->actor($request));
+
+        $this->applyReadableKeys($request, $type);
 
         return RecordResource::make($record->load('entityType'));
     }
@@ -65,5 +82,23 @@ final class RecordController extends Controller
     private function resolveType(string $key): EntityType
     {
         return EntityType::query()->where('key', $key)->firstOrFail();
+    }
+
+    /** Stash the field keys this actor may read so RecordResource strips the rest. */
+    private function applyReadableKeys(Request $request, EntityType $type): void
+    {
+        $actor = $this->actor($request);
+
+        if ($actor !== null) {
+            $request->attributes->set('readableFieldKeys', $this->fieldGate->readableKeysForType($actor, $type));
+        }
+    }
+
+    private function actor(Request $request): ?User
+    {
+        /** @var User|null $user */
+        $user = $request->user();
+
+        return $user;
     }
 }

@@ -34,6 +34,7 @@ function bootTokenFor(Tenant $tenant, string $email = 'u@alpha.test'): string
 {
     $user = User::create(['name' => $email, 'email' => $email, 'password' => Hash::make('secret123')]);
     $tenant->users()->attach($user->id, ['status' => 'active']);
+    grantOps($user, $tenant); // full op catalog — these tests exercise the engine, not authz
 
     return $user->createToken('t', ["tenant:{$tenant->id}"])->plainTextToken;
 }

@@ -48,6 +48,10 @@ class DemoEntitySeeder extends Seeder
         $this->upsertLayout($tenant->id, $deal->id, 'card', 'deal.card', $this->cardSchema());
         $this->upsertLayout($tenant->id, $deal->id, 'board', 'deal.board', $this->boardSchema());
 
+        // Phase 3: a tenant nav layout — each item gated by a ui.nav.* permission and resolved by the
+        // frontend catch-all route + view registry (slug → viewType → page component).
+        $this->upsertLayout($tenant->id, $deal->id, 'nav', 'main', $this->navSchema());
+
         $manager->forget();
     }
 
@@ -116,6 +120,30 @@ class DemoEntitySeeder extends Seeder
         return [
             'type' => 'board', 'id' => 'board-root',
             'props' => ['pipeline' => 'sales', 'cardLayoutKey' => 'deal.card'],
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function navSchema(): array
+    {
+        return [
+            'type' => 'nav', 'id' => 'nav-root',
+            'children' => [
+                [
+                    'type' => 'nav-item', 'id' => 'nav-pipeline', 'permission' => ['ui' => 'ui.nav.boards'],
+                    'props' => [
+                        'slug' => 'pipeline', 'label' => ['en' => 'Pipeline'], 'icon' => 'pi-th-large',
+                        'viewType' => 'kanban-board', 'entityType' => 'deal', 'pipeline' => 'sales', 'layoutKey' => 'deal.board',
+                    ],
+                ],
+                [
+                    'type' => 'nav-item', 'id' => 'nav-leads', 'permission' => ['ui' => 'ui.nav.list'],
+                    'props' => [
+                        'slug' => 'leads', 'label' => ['en' => 'Leads'], 'icon' => 'pi-list',
+                        'viewType' => 'list', 'entityType' => 'deal', 'layoutKey' => 'deal.detail',
+                    ],
+                ],
+            ],
         ];
     }
 

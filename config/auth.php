@@ -44,6 +44,19 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Split-permission model (Phase 3, ARCHITECTURE §6). Two spatie guards namespace the
+        // permission catalogs: "op" = operation perms (backend source of truth), "ui" = UI perms
+        // (rendering only). Both resolve the user from the same Sanctum bearer token as the API.
+        'op' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ],
+
+        'ui' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ],
     ],
 
     /*

@@ -47,14 +47,8 @@ final class ResolveTenant
 
     private function tenantIdFromToken(User $user): ?int
     {
-        $token = $user->currentAccessToken();
-
-        if ($token === null) {
-            return null;
-        }
-
         /** @var list<string> $abilities */
-        $abilities = $token->abilities ?? [];
+        $abilities = $user->currentAccessToken()->abilities ?? [];
 
         foreach ($abilities as $ability) {
             if (str_starts_with($ability, 'tenant:')) {

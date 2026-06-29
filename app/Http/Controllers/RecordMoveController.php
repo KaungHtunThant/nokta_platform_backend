@@ -8,6 +8,7 @@ use App\Http\Requests\Records\MoveRecordRequest;
 use App\Http\Resources\RecordResource;
 use App\Models\Record;
 use App\Models\Stage;
+use App\Models\User;
 use App\Services\Records\RecordMoveService;
 
 /**
@@ -23,7 +24,10 @@ final class RecordMoveController extends Controller
         /** @var Stage $stage */
         $stage = Stage::query()->findOrFail($request->integer('stage_id'));
 
-        $moved = $this->mover->move($record, $stage, $request->comment(), $request->position());
+        /** @var User $actor */
+        $actor = $request->user();
+
+        $moved = $this->mover->move($record, $stage, $request->comment(), $request->position(), $actor);
 
         return RecordResource::make($moved->load('entityType'));
     }

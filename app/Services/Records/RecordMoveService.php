@@ -9,6 +9,7 @@ use App\DTOs\StageMoveContext;
 use App\Events\RecordMoved;
 use App\Models\Record;
 use App\Models\Stage;
+use App\Models\User;
 use App\Services\Stages\StageTransitionPolicy;
 
 /**
@@ -23,7 +24,7 @@ final class RecordMoveService
         private readonly StageTransitionPolicy $policy,
     ) {}
 
-    public function move(Record $record, Stage $toStage, ?string $comment = null, ?float $position = null): Record
+    public function move(Record $record, Stage $toStage, ?string $comment = null, ?float $position = null, ?User $actor = null): Record
     {
         $fromStage = $record->stage_id !== null
             ? Stage::query()->find($record->stage_id)
@@ -34,6 +35,7 @@ final class RecordMoveService
             fromStage: $fromStage,
             toStage: $toStage->loadMissing('rules'),
             comment: $comment,
+            actor: $actor,
         );
 
         $this->policy->assert($context); // throws ValidationException on rejection

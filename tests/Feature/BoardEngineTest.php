@@ -46,6 +46,7 @@ function tokenForTenant(Tenant $tenant, string $email = 'board@alpha.test'): str
 {
     $user = User::create(['name' => $email, 'email' => $email, 'password' => Hash::make('secret123')]);
     $tenant->users()->attach($user->id, ['status' => 'active']);
+    grantOps($user, $tenant); // full op catalog — these tests exercise board mechanics, not authz
 
     return $user->createToken('t', ["tenant:{$tenant->id}"])->plainTextToken;
 }
