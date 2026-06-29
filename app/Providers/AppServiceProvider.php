@@ -6,6 +6,8 @@ namespace App\Providers;
 
 use App\Contracts\RecordRepositoryInterface;
 use App\Contracts\StageRuleEvaluator;
+use App\Models\Record;
+use App\Policies\RecordPolicy;
 use App\Repositories\Eloquent\EloquentRecordRepository;
 use App\Rules\Stage\AllowBackwardRule;
 use App\Rules\Stage\CooldownRule;
@@ -14,6 +16,7 @@ use App\Rules\Stage\RequireFieldsRule;
 use App\Services\Stages\StageTransitionPolicy;
 use App\Support\Tenancy\TenantManager;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -44,5 +47,9 @@ class AppServiceProvider extends ServiceProvider
         // Flat resources (no "data" envelope): consistent contract + the record's custom-field
         // bag is itself named "data", which would otherwise collide with the wrapper.
         JsonResource::withoutWrapping();
+
+        // Object-level record authorization (op guard). Explicit registration — the class lives in
+        // App\Models, and we keep policy wiring discoverable rather than relying on auto-discovery.
+        Gate::policy(Record::class, RecordPolicy::class);
     }
 }

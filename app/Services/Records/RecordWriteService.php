@@ -9,6 +9,7 @@ use App\DTOs\RecordInput;
 use App\Models\EntityType;
 use App\Models\FieldDefinition;
 use App\Models\Record;
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -20,35 +21,49 @@ use Illuminate\Validation\ValidationException;
  */
 final class RecordWriteService
 {
-    public function __construct(private readonly RecordRepositoryInterface $records) {}
+    public function __construct(
+        private readonly RecordRepositoryInterface $records,
+        private readonly FieldGate $fieldGate,
+    ) {}
 
-    public function create(EntityType $type, RecordInput $input): Record
+    public function create(EntityType $type, RecordInput $input, ?User $actor = null): Record
     {
-        $attributes = $this->buildAttributes($type, $input);
+        $attributes = $this->buildAttributes($type, $input, $actor, []);
         $attributes['entity_type_id'] = $type->id;
 
         return $this->records->create($attributes);
     }
 
-    public function update(EntityType $type, Record $record, RecordInput $input): Record
+    public function update(EntityType $type, Record $record, RecordInput $input, ?User $actor = null): Record
     {
-        return $this->records->update($record, $this->buildAttributes($type, $input));
+        return $this->records->update($record, $this->buildAttributes($type, $input, $actor, $record->data ?? []));
     }
 
     /**
+     * @param  array<string, mixed>  $existing  the record's current custom-field bag (empty on create)
      * @return array<string, mixed>
      */
-    private function buildAttributes(EntityType $type, RecordInput $input): array
+    private function buildAttributes(EntityType $type, RecordInput $input, ?User $actor, array $existing): array
     {
         $defs = $type->fieldDefinitions()->get();
 
-        $this->assertRequiredPresent($defs, $input->data);
+        // Field-level authorization: drop values the actor may not update BEFORE persist, so a forced
+        // payload cannot write a denied field. Null actor (seed/internal) = no gating.
+        $incoming = $actor !== null
+            ? $this->fieldGate->stripUnwritable($input->data, $actor, $defs)
+            : $input->data;
+
+        // Overlay the allowed incoming values onto existing data: untouched and denied fields keep
+        // their current values (stripping a field must not erase it), while permitted edits apply.
+        $data = array_merge($existing, $incoming);
+
+        $this->assertRequiredPresent($defs, $data);
 
         return [
             'owner_id' => $input->ownerId,
             'stage_id' => $input->stageId,
             'status' => $input->status,
-            'data' => $this->sanitizeData($defs, $input->data),
+            'data' => $this->sanitizeData($defs, $data),
         ];
     }
 
@@ -77,7 +92,7 @@ final class RecordWriteService
     {
         $missing = $defs
             ->filter(fn (FieldDefinition $d): bool => $d->isRequired())
-            ->filter(fn (FieldDefinition $d): bool => ! isset($data[$d->key]) || $data[$d->key] === '' || $data[$d->key] === null)
+            ->filter(fn (FieldDefinition $d): bool => ! isset($data[$d->key]) || $data[$d->key] === '')
             ->mapWithKeys(fn (FieldDefinition $d): array => ["data.{$d->key}" => "The {$d->key} field is required."])
             ->all();
 

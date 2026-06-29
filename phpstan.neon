@@ -8,5 +8,5 @@ parameters:
         - database
         - routes
     # Enforce strong typing (no loose arrays / mixed across layers — see TECHNICAL-STRUCTURE).
-    checkMissingIterableValueType: true
+    # Missing iterable value types are reported by default at this level in PHPStan 2.x.
     treatPhpDocTypesAsCertain: true

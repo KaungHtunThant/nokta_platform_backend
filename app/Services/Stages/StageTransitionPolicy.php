@@ -19,8 +19,10 @@ final class StageTransitionPolicy
     /** @var array<string, StageRuleEvaluator> */
     private array $evaluators = [];
 
-    public function __construct(StageRuleEvaluator ...$evaluators)
-    {
+    public function __construct(
+        private readonly StageAccessGate $stageAccess,
+        StageRuleEvaluator ...$evaluators,
+    ) {
         foreach ($evaluators as $evaluator) {
             $this->evaluators[$evaluator->key()] = $evaluator;
         }
@@ -32,6 +34,14 @@ final class StageTransitionPolicy
     public function check(StageMoveContext $context): array
     {
         $reasons = [];
+
+        // Per-stage access (role_stage_access): can this actor move out of / into these stages?
+        if ($context->actor !== null) {
+            $reasons = array_merge(
+                $reasons,
+                $this->stageAccess->check($context->actor, $context->fromStage, $context->toStage),
+            );
+        }
 
         foreach ($context->toStage->rules as $rule) {
             /** @var StageRule $rule */
