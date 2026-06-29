@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Events\FieldDefinitionChanged;
 use App\Http\Requests\Fields\StoreFieldDefinitionRequest;
 use App\Http\Resources\FieldDefinitionResource;
 use App\Models\EntityType;
@@ -26,6 +27,8 @@ final class FieldDefinitionController extends Controller
             'position' => (int) $request->input('position', 0),
             'storage_strategy' => $request->input('storage_strategy', 'json'),
         ]);
+
+        event(new FieldDefinitionChanged($field)); // live schema invalidation for clients/builders
 
         return FieldDefinitionResource::make($field)->response()->setStatusCode(201);
     }

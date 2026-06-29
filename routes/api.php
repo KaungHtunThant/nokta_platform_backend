@@ -49,6 +49,13 @@ Route::middleware(['auth:sanctum', 'resolve.tenant'])->group(function (): void {
 
     Route::get('/layouts/{surface}/{key}', [LayoutController::class, 'show'])->middleware('op:record.read');
 
+    // --- Phase 5: layout builder (draft → publish → rollback), gated by op:manage.layouts ---
+    Route::get('/layouts/{surface}/{key}/versions', [LayoutController::class, 'versions'])->middleware('op:manage.layouts');
+    Route::post('/layouts/{surface}/{key}/versions', [LayoutController::class, 'storeVersion'])->middleware('op:manage.layouts');
+    Route::post('/layouts/{surface}/{key}/publish', [LayoutController::class, 'publish'])->middleware('op:manage.layouts');
+    Route::post('/layouts/{surface}/{key}/rollback', [LayoutController::class, 'rollback'])->middleware('op:manage.layouts');
+    Route::post('/layouts/{surface}/{key}/reset', [LayoutController::class, 'reset'])->middleware('op:manage.layouts');
+
     // --- Phase 2: pipelines, stages, board, stage moves ---
     Route::get('/entity-types/{entityTypeKey}/pipelines', [PipelineController::class, 'index'])->middleware('op:record.read');
     Route::post('/entity-types/{entityTypeKey}/pipelines', [PipelineController::class, 'store'])->middleware('op:manage.entity-types');

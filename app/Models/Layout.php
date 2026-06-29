@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 class Layout extends BaseModel
 {
     /** @var list<string> */
@@ -21,4 +23,10 @@ class Layout extends BaseModel
         'schema_version' => 'integer',
         'published_at' => 'datetime',
     ];
+
+    /** @return HasMany<LayoutVersion, $this> */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(LayoutVersion::class);
+    }
 }
