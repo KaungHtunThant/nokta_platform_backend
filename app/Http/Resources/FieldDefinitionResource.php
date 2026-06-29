@@ -26,6 +26,10 @@ class FieldDefinitionResource extends JsonResource
             'ui' => $this->ui ?? [],
             'default_value' => $this->default_value,
             'position' => $this->position,
+            // Phase 4 — drive filter/sort/report UI off these capability flags.
+            'is_filterable' => $this->is_filterable,
+            'is_sortable' => $this->is_sortable,
+            'is_reportable' => $this->is_reportable,
             'options' => $this->whenLoaded('options', fn () => $this->options->map(fn ($o): array => [
                 'key' => $o->key,
                 'label' => Translate::label($o->label),

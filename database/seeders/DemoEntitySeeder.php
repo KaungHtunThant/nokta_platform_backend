@@ -151,14 +151,14 @@ class DemoEntitySeeder extends Seeder
     private function fields(): array
     {
         return [
-            ['key' => 'title', 'type' => 'text', 'label' => ['en' => 'Title'], 'validation' => ['required' => true]],
+            ['key' => 'title', 'type' => 'text', 'label' => ['en' => 'Title'], 'validation' => ['required' => true], 'is_sortable' => true, 'is_reportable' => true],
             ['key' => 'note', 'type' => 'textarea', 'label' => ['en' => 'Note']],
-            ['key' => 'email', 'type' => 'email', 'label' => ['en' => 'Email']],
-            ['key' => 'budget', 'type' => 'money', 'label' => ['en' => 'Budget']],
+            ['key' => 'email', 'type' => 'email', 'label' => ['en' => 'Email'], 'is_reportable' => true],
+            ['key' => 'budget', 'type' => 'money', 'label' => ['en' => 'Budget'], 'is_filterable' => true, 'is_sortable' => true, 'is_reportable' => true],
             ['key' => 'age', 'type' => 'number', 'label' => ['en' => 'Age']],
-            ['key' => 'appointment_date', 'type' => 'date', 'label' => ['en' => 'Appointment date']],
-            ['key' => 'vip', 'type' => 'bool', 'label' => ['en' => 'VIP']],
-            ['key' => 'priority', 'type' => 'select', 'label' => ['en' => 'Priority'],
+            ['key' => 'appointment_date', 'type' => 'date', 'label' => ['en' => 'Appointment date'], 'is_filterable' => true],
+            ['key' => 'vip', 'type' => 'bool', 'label' => ['en' => 'VIP'], 'is_filterable' => true],
+            ['key' => 'priority', 'type' => 'select', 'label' => ['en' => 'Priority'], 'is_filterable' => true, 'is_sortable' => true,
                 'ui' => ['options' => [
                     ['key' => 'low', 'label' => ['en' => 'Low']],
                     ['key' => 'medium', 'label' => ['en' => 'Medium']],
