@@ -15,3 +15,9 @@ Broadcast::channel(
     'tenant.{tenantId}.entity.{type}.board',
     fn (User $user, int $tenantId, string $type): bool => $user->belongsToTenant($tenantId),
 );
+
+// Tenant config channel: layout.published / field-definition.changed for live schema/layout sync.
+Broadcast::channel(
+    'tenant.{tenantId}.config',
+    fn (User $user, int $tenantId): bool => $user->belongsToTenant($tenantId),
+);
