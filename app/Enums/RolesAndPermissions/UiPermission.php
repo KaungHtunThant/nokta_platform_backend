@@ -14,6 +14,7 @@ enum UiPermission: string
     case NavBoards = 'ui.nav.boards';
     case NavList = 'ui.nav.list';
     case NavContacts = 'ui.nav.contacts';
+    case NavPatients = 'ui.nav.patients';
     case NavUsers = 'ui.nav.users';
     case NavSettings = 'ui.nav.settings';
 

@@ -35,4 +35,21 @@ class EntityType extends BaseModel
     {
         return $this->hasMany(Pipeline::class)->orderBy('position');
     }
+
+    /** The field key used as a record's human label (relation pickers, related-record lists). */
+    public function titleField(): ?string
+    {
+        $field = $this->config['title_field'] ?? null;
+
+        return is_string($field) && $field !== '' ? $field : null;
+    }
+
+    /** A short display label for one of this type's records, falling back to "#id". */
+    public function titleFor(Record $record): string
+    {
+        $field = $this->titleField();
+        $value = $field !== null ? ($record->data[$field] ?? null) : null;
+
+        return is_scalar($value) && $value !== '' ? (string) $value : '#'.$record->id;
+    }
 }
