@@ -19,6 +19,9 @@ class RecordResource extends JsonResource
         return [
             'id' => $this->id,
             'entity_type' => $this->whenLoaded('entityType', fn () => $this->entityType?->key),
+            // Human label (entity_types.config.title_field) — used by relation pickers/displays so the
+            // client never has to know which field titles a given entity type.
+            'label' => $this->whenLoaded('entityType', fn () => $this->entityType?->titleFor($this->resource)),
             'stage_id' => $this->stage_id,
             'owner_id' => $this->owner_id,
             'status' => $this->status,

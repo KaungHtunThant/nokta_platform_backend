@@ -121,6 +121,17 @@ it('surfaces the relation from both records (bidirectional traversal)', function
     expect($links->relatedTo(Record::find($c->id))->pluck('id')->all())->toBe([$d->id]);
 });
 
+it('exposes a record label (entity title field) over HTTP', function () {
+    [$tenant, , $contact] = bootRelationTenant();
+    $token = relationToken($tenant);
+    $c = app(RecordWriteService::class)->create($contact, new RecordInput(null, null, null, ['name' => 'Jane Doe']));
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson("/api/records/{$c->id}")
+        ->assertOk()
+        ->assertJsonPath('label', 'Jane Doe');
+});
+
 it('searches records for the relation picker by the entity title field', function () {
     [$tenant, , $contact] = bootRelationTenant();
     $token = relationToken($tenant);
