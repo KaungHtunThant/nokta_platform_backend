@@ -24,6 +24,14 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
 
+      - name: Tenancy leak guard (no scope bypass / raw DB in app code)
+        run: |
+          if grep -rnE 'withoutGlobalScope\(|DB::' app/; then
+            echo "::error::Tenancy bypass found — withoutGlobalScope()/raw DB:: are banned in app/ (use tenant-scoped Eloquent)."
+            exit 1
+          fi
+          echo "No tenancy bypass found in app/."
+
       - name: Lint (Pint)
         run: composer lint
 
