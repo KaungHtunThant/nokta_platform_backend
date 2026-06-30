@@ -8,6 +8,7 @@ use App\Http\Controllers\BoardController;
 use App\Http\Controllers\FieldDefinitionController;
 use App\Http\Controllers\LayoutController;
 use App\Http\Controllers\PipelineController;
+use App\Http\Controllers\RecordAuditController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\RecordFileController;
 use App\Http\Controllers\RecordLinkController;
@@ -65,6 +66,9 @@ Route::middleware(['auth:sanctum', 'resolve.tenant'])->group(function (): void {
     // Phase 7: file/media fields — attach/remove (per-field write authz inside the service).
     Route::post('/records/{record}/files', [RecordFileController::class, 'store'])->middleware('can:update,record');
     Route::delete('/records/{record}/files/{media}', [RecordFileController::class, 'destroy'])->middleware('can:update,record');
+
+    // Phase 7: audit trail for a record (who changed what, when).
+    Route::get('/records/{record}/audits', [RecordAuditController::class, 'index'])->middleware('op:audit.view');
 
     Route::get('/layouts/{surface}/{key}', [LayoutController::class, 'show'])->middleware('op:record.read');
 
