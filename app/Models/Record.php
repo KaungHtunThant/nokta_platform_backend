@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * The single Eloquent model for ALL dynamic entities (deal/contact/patient/...).
@@ -18,8 +20,9 @@ use Laravel\Scout\Searchable;
  * fields for global search/reporting. The Scout observer keeps the index in sync on save/delete; the
  * index is rebuildable from JSON (RebuildProjection), like the EAV projection.
  */
-class Record extends BaseModel
+class Record extends BaseModel implements HasMedia
 {
+    use InteractsWithMedia;
     use Searchable;
     use SoftDeletes;
 

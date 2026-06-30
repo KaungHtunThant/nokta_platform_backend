@@ -61,7 +61,7 @@ final class RecordController extends Controller
         $type = $record->entityType()->firstOrFail();
         $this->applyReadableKeys($request, $type);
 
-        return RecordResource::make($record->load('entityType'));
+        return RecordResource::make($record->load('entityType', 'media'));
     }
 
     public function update(UpdateRecordRequest $request, Record $record): RecordResource
