@@ -25,6 +25,7 @@ final class RecordWriteService
         private readonly RecordRepositoryInterface $records,
         private readonly FieldGate $fieldGate,
         private readonly FieldProjector $projector,
+        private readonly RecordLinkService $links,
     ) {}
 
     public function create(EntityType $type, RecordInput $input, ?User $actor = null): Record
@@ -35,6 +36,7 @@ final class RecordWriteService
 
         $record = $this->records->create($attributes);
         $this->projector->sync($record, $defs, $record->data ?? []);
+        $this->links->sync($record, $defs, $record->data ?? []);
 
         return $record;
     }
@@ -44,6 +46,7 @@ final class RecordWriteService
         $defs = $type->fieldDefinitions()->get();
         $record = $this->records->update($record, $this->buildAttributes($defs, $input, $actor, $record->data ?? []));
         $this->projector->sync($record, $defs, $record->data ?? []);
+        $this->links->sync($record, $defs, $record->data ?? []);
 
         return $record;
     }
@@ -67,11 +70,18 @@ final class RecordWriteService
 
         $this->assertRequiredPresent($defs, $data);
 
+        $clean = $this->sanitizeData($defs, $data);
+
+        // Relation fields reference other records: reject cross-tenant / wrong-type targets before persist.
+        $this->links->validate($defs, $clean);
+
         return [
             'owner_id' => $input->ownerId,
             'stage_id' => $input->stageId,
             'status' => $input->status,
-            'data' => $this->sanitizeData($defs, $data),
+            'data' => $clean,
+            // Canonical relations (e.g. contact_id) write a locked column too; [] for non-relation entities.
+            ...$this->links->canonicalColumns($defs, $clean),
         ];
     }
 
