@@ -25,6 +25,7 @@ class RecordResource extends JsonResource
             'stage_id' => $this->stage_id,
             'owner_id' => $this->owner_id,
             'status' => $this->status,
+            'is_locked' => (bool) $this->is_locked,
             'data' => $this->visibleData($request),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),

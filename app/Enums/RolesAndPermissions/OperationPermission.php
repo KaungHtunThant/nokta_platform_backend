@@ -19,6 +19,10 @@ enum OperationPermission: string
     case RecordUpdate = 'record.update';
     case RecordDelete = 'record.delete';
     case StageMove = 'stage.move';
+    // Phase 7: append-only / signed clinical records. Locking is operation-side immutability;
+    // unlocking is a separate, more privileged grant.
+    case RecordLock = 'record.lock';
+    case RecordUnlock = 'record.unlock';
 
     case ManageEntityTypes = 'manage.entity-types';
     case ManageFields = 'manage.fields';

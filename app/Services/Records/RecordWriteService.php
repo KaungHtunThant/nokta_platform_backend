@@ -43,6 +43,12 @@ final class RecordWriteService
 
     public function update(EntityType $type, Record $record, RecordInput $input, ?User $actor = null): Record
     {
+        // Append-only / signed records are immutable on the operation side (Phase 7) — defense in depth
+        // alongside RecordPolicy, so non-HTTP callers (jobs, internal services) are guarded too.
+        if ($record->is_locked) {
+            throw ValidationException::withMessages(['record' => 'This record is locked and cannot be edited.']);
+        }
+
         $defs = $type->fieldDefinitions()->get();
         $record = $this->records->update($record, $this->buildAttributes($defs, $input, $actor, $record->data ?? []));
         $this->projector->sync($record, $defs, $record->data ?? []);
