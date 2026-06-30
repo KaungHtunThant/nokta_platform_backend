@@ -9,7 +9,9 @@ use App\Http\Controllers\FieldDefinitionController;
 use App\Http\Controllers\LayoutController;
 use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\RecordController;
+use App\Http\Controllers\RecordLinkController;
 use App\Http\Controllers\RecordMoveController;
+use App\Http\Controllers\RecordPickerController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SchemaController;
 use App\Http\Controllers\StageController;
@@ -43,9 +45,16 @@ Route::middleware(['auth:sanctum', 'resolve.tenant'])->group(function (): void {
     // Records — coarse op gate on collection routes; object-level RecordPolicy on bound routes.
     Route::get('/entity-types/{entityTypeKey}/records', [RecordController::class, 'index'])->middleware('op:record.read');
     Route::post('/entity-types/{entityTypeKey}/records', [RecordController::class, 'store'])->middleware('op:record.create');
+    // Phase 6: relation-field record picker (light {id,label} list of a target entity type).
+    Route::get('/entity-types/{entityTypeKey}/records-picker', [RecordPickerController::class, 'index'])->middleware('op:record.read');
     Route::get('/records/{record}', [RecordController::class, 'show'])->middleware('can:view,record');
     Route::put('/records/{record}', [RecordController::class, 'update'])->middleware('can:update,record');
     Route::delete('/records/{record}', [RecordController::class, 'destroy'])->middleware('can:delete,record');
+
+    // Phase 6: cross-record relations — list/create/remove links (both directions).
+    Route::get('/records/{record}/links', [RecordLinkController::class, 'index'])->middleware('can:view,record');
+    Route::post('/records/{record}/links', [RecordLinkController::class, 'store'])->middleware('can:update,record');
+    Route::delete('/records/{record}/links', [RecordLinkController::class, 'destroy'])->middleware('can:update,record');
 
     Route::get('/layouts/{surface}/{key}', [LayoutController::class, 'show'])->middleware('op:record.read');
 
