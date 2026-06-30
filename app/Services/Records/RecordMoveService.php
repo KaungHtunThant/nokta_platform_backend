@@ -11,6 +11,7 @@ use App\Models\Record;
 use App\Models\Stage;
 use App\Models\User;
 use App\Services\Stages\StageTransitionPolicy;
+use Illuminate\Validation\ValidationException;
 
 /**
  * The single funnel for stage transitions: validate via the rule-driven policy, persist the new
@@ -26,6 +27,11 @@ final class RecordMoveService
 
     public function move(Record $record, Stage $toStage, ?string $comment = null, ?float $position = null, ?User $actor = null): Record
     {
+        // A locked (signed) record cannot change stage (Phase 7) — defense in depth with RecordPolicy.
+        if ($record->is_locked) {
+            throw ValidationException::withMessages(['record' => 'This record is locked and cannot be moved.']);
+        }
+
         $fromStage = $record->stage_id !== null
             ? Stage::query()->find($record->stage_id)
             : null;

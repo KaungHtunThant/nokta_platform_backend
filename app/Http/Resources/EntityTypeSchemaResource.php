@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\EntityType;
+use App\Services\Records\FilterableFieldCap;
 use App\Support\Translate;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -26,6 +27,8 @@ class EntityTypeSchemaResource extends JsonResource
             'icon' => $this->icon,
             'supports_pipeline' => $this->supports_pipeline,
             'fields' => FieldDefinitionResource::collection($this->whenLoaded('fieldDefinitions')),
+            // Phase 7: per-tenant filterable budget, so the builder can show remaining capacity.
+            'limits' => ['filterable_remaining' => app(FilterableFieldCap::class)->remaining()],
         ];
     }
 }

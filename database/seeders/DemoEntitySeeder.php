@@ -125,6 +125,8 @@ class DemoEntitySeeder extends Seeder
             ['key' => 'date_of_birth', 'type' => 'date', 'label' => ['en' => 'Date of birth'], 'is_filterable' => true],
             ['key' => 'contact', 'type' => 'relation', 'label' => ['en' => 'Primary contact'],
                 'ui' => ['target_entity_type' => 'contact', 'canonical_column' => 'contact_id']],
+            // Phase 7: a file/media field — attachments live in medialibrary, not the JSON bag.
+            ['key' => 'chart', 'type' => 'file', 'label' => ['en' => 'Chart / attachment']],
         ];
         foreach ($fields as $position => $field) {
             $patient->fieldDefinitions()->updateOrCreate(
@@ -135,13 +137,13 @@ class DemoEntitySeeder extends Seeder
 
         $this->upsertLayout($tenantId, $patient->id, 'form', 'patient.form', [
             'type' => 'section', 'id' => 'root', 'props' => ['title' => ['en' => 'Patient']],
-            'children' => $this->fieldNodes(['full_name', 'mrn', 'date_of_birth', 'contact']),
+            'children' => $this->fieldNodes(['full_name', 'mrn', 'date_of_birth', 'contact', 'chart']),
         ]);
         $this->upsertLayout($tenantId, $patient->id, 'detail', 'patient.detail', [
             'type' => 'tabs', 'id' => 'root',
             'children' => [
                 ['type' => 'section', 'id' => 'overview', 'props' => ['title' => ['en' => 'Overview']],
-                    'children' => $this->fieldNodes(['full_name', 'mrn', 'date_of_birth', 'contact'])],
+                    'children' => $this->fieldNodes(['full_name', 'mrn', 'date_of_birth', 'contact', 'chart'])],
             ],
         ]);
     }

@@ -8,8 +8,11 @@ use App\Http\Controllers\BoardController;
 use App\Http\Controllers\FieldDefinitionController;
 use App\Http\Controllers\LayoutController;
 use App\Http\Controllers\PipelineController;
+use App\Http\Controllers\RecordAuditController;
 use App\Http\Controllers\RecordController;
+use App\Http\Controllers\RecordFileController;
 use App\Http\Controllers\RecordLinkController;
+use App\Http\Controllers\RecordLockController;
 use App\Http\Controllers\RecordMoveController;
 use App\Http\Controllers\RecordPickerController;
 use App\Http\Controllers\RoleController;
@@ -55,6 +58,17 @@ Route::middleware(['auth:sanctum', 'resolve.tenant'])->group(function (): void {
     Route::get('/records/{record}/links', [RecordLinkController::class, 'index'])->middleware('can:view,record');
     Route::post('/records/{record}/links', [RecordLinkController::class, 'store'])->middleware('can:update,record');
     Route::delete('/records/{record}/links', [RecordLinkController::class, 'destroy'])->middleware('can:update,record');
+
+    // Phase 7: append-only / signed records — lock is operation-side immutability, unlock is privileged.
+    Route::post('/records/{record}/lock', [RecordLockController::class, 'lock'])->middleware('can:lock,record');
+    Route::post('/records/{record}/unlock', [RecordLockController::class, 'unlock'])->middleware('can:unlock,record');
+
+    // Phase 7: file/media fields — attach/remove (per-field write authz inside the service).
+    Route::post('/records/{record}/files', [RecordFileController::class, 'store'])->middleware('can:update,record');
+    Route::delete('/records/{record}/files/{media}', [RecordFileController::class, 'destroy'])->middleware('can:update,record');
+
+    // Phase 7: audit trail for a record (who changed what, when).
+    Route::get('/records/{record}/audits', [RecordAuditController::class, 'index'])->middleware('op:audit.view');
 
     Route::get('/layouts/{surface}/{key}', [LayoutController::class, 'show'])->middleware('op:record.read');
 

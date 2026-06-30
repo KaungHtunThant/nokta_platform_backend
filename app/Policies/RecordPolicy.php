@@ -33,17 +33,28 @@ final class RecordPolicy
 
     public function update(User $user, Record $record): bool
     {
-        return $this->can($user, OperationPermission::RecordUpdate);
+        // A locked (signed) record is append-only: no update even with record.update (Phase 7).
+        return ! $record->is_locked && $this->can($user, OperationPermission::RecordUpdate);
     }
 
     public function delete(User $user, Record $record): bool
     {
-        return $this->can($user, OperationPermission::RecordDelete);
+        return ! $record->is_locked && $this->can($user, OperationPermission::RecordDelete);
     }
 
     public function move(User $user, Record $record): bool
     {
-        return $this->can($user, OperationPermission::StageMove);
+        return ! $record->is_locked && $this->can($user, OperationPermission::StageMove);
+    }
+
+    public function lock(User $user, Record $record): bool
+    {
+        return $this->can($user, OperationPermission::RecordLock);
+    }
+
+    public function unlock(User $user, Record $record): bool
+    {
+        return $this->can($user, OperationPermission::RecordUnlock);
     }
 
     private function can(User $user, OperationPermission $permission): bool

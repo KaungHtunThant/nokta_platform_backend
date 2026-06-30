@@ -53,6 +53,17 @@ final class FieldGate
     }
 
     /**
+     * Whether the user may UPDATE a single field (used by the file-upload path, which writes one
+     * field at a time). Same explicit-deny-wins semantics as stripUnwritable().
+     */
+    public function canUpdate(User $user, FieldDefinition $def): bool
+    {
+        $denied = $this->deniedRows($user, collect([$def]));
+
+        return ! ($denied[$def->id] ?? collect())->contains(fn (RoleFieldAccess $r): bool => ! $r->can_update);
+    }
+
+    /**
      * Drop any data keys the user may not UPDATE (forced payloads cannot reach denied fields).
      *
      * @param  array<string, mixed>  $data

@@ -24,6 +24,9 @@ class StoreFieldDefinitionRequest extends FormRequest
             'ui' => ['nullable', 'array'],
             'position' => ['nullable', 'integer'],
             'storage_strategy' => ['nullable', 'in:column,json,eav'],
+            'is_filterable' => ['nullable', 'boolean'],
+            'is_sortable' => ['nullable', 'boolean'],
+            'is_reportable' => ['nullable', 'boolean'],
         ];
     }
 }

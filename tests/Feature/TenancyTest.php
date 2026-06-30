@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\EntityType;
 use App\Models\Tenant;
 use App\Models\TenantSetting;
 use App\Models\User;
@@ -78,6 +79,46 @@ it('isolates tenant-owned data via the global scope', function () {
     $manager->set($beta->id);
     expect(TenantSetting::count())->toBe(1)
         ->and(TenantSetting::first()->value)->toBe(['color' => 'blue']);
+});
+
+it('does not leak records across tenants over HTTP', function () {
+    $manager = app(TenantManager::class);
+
+    // Tenant alpha: a deal entity + one record, created by an alpha member.
+    $alpha = makeTenant('alpha');
+    $aUser = makeUserIn($alpha, 'a@alpha.test');
+    $manager->set($alpha->id);
+    grantOps($aUser, $alpha);
+    $aToken = $aUser->createToken('t', ["tenant:{$alpha->id}"])->plainTextToken;
+    $deal = EntityType::create(['key' => 'deal', 'label' => ['en' => 'Deal'], 'config' => ['title_field' => 'title']]);
+    $deal->fieldDefinitions()->create(['key' => 'title', 'type' => 'text', 'label' => ['en' => 'T'], 'validation' => ['required' => true], 'storage_strategy' => 'json', 'position' => 0]);
+    $aRecordId = $this->withHeader('Authorization', "Bearer {$aToken}")
+        ->postJson('/api/entity-types/deal/records', ['data' => ['title' => 'Alpha secret']])
+        ->assertCreated()->json('id');
+
+    // Tenant beta: its own deal entity + member.
+    $beta = makeTenant('beta');
+    $bUser = makeUserIn($beta, 'b@beta.test');
+    $manager->set($beta->id);
+    grantOps($bUser, $beta);
+    $bToken = $bUser->createToken('t', ["tenant:{$beta->id}"])->plainTextToken;
+    EntityType::create(['key' => 'deal', 'label' => ['en' => 'Deal'], 'config' => ['title_field' => 'title']]);
+
+    // Flush the auth guard between the two users' requests: in a single test process the sanctum guard
+    // caches the first-resolved user, which would mask the switch to beta (test-only artifact — each
+    // real HTTP request is a fresh container).
+    $this->app['auth']->forgetGuards();
+
+    // Beta sees none of alpha's records, and cannot fetch alpha's record by id (route binding is scoped).
+    $this->withHeader('Authorization', "Bearer {$bToken}")
+        ->getJson('/api/entity-types/deal/records')
+        ->assertOk()
+        ->assertJsonCount(0, 'data');
+
+    $this->app['auth']->forgetGuards();
+    $this->withHeader('Authorization', "Bearer {$bToken}")
+        ->getJson("/api/records/{$aRecordId}")
+        ->assertNotFound();
 });
 
 it('rejects a token whose tenant membership no longer holds', function () {
