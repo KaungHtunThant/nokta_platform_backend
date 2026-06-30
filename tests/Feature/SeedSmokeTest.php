@@ -36,4 +36,22 @@ it('seeds a tenant admin that logs in with resolved abilities and a nav layout',
         ->assertJsonPath('surface', 'nav')
         ->assertJsonPath('schema.children.0.type', 'nav-item')
         ->assertJsonPath('schema.children.0.permission.ui', 'ui.nav.boards');
+
+    // Phase 6: the contact + patient entity types are authored entirely as config (schema + layouts).
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/entity-types/contact/schema')
+        ->assertOk()
+        ->assertJsonPath('key', 'contact');
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/layouts/detail/contact.detail')
+        ->assertOk()
+        ->assertJsonPath('schema.children.1.children.0.type', 'related-records')
+        ->assertJsonPath('schema.children.1.children.0.props.relationKey', 'contact');
+
+    // The deal's contact field is a relation pointing at the contact entity type.
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->getJson('/api/entity-types/deal/schema')
+        ->assertOk()
+        ->assertJsonFragment(['key' => 'contact', 'type' => 'relation']);
 });
