@@ -22,6 +22,10 @@ class StoreFieldDefinitionRequest extends FormRequest
             'label' => ['required', 'array'],
             'validation' => ['nullable', 'array'],
             'ui' => ['nullable', 'array'],
+            // Computed fields carry their expression + result type in `ui`; the expression is required
+            // for a computed field and its syntax is validated in the controller (parses()).
+            'ui.expression' => ['nullable', 'required_if:type,computed', 'string', 'max:2000'],
+            'ui.result_type' => ['nullable', 'in:text,number,date,bool'],
             'position' => ['nullable', 'integer'],
             'storage_strategy' => ['nullable', 'in:column,json,eav'],
             'is_filterable' => ['nullable', 'boolean'],

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Contracts\ComputedFieldEvaluator;
 use App\Contracts\RecordRepositoryInterface;
 use App\Contracts\StageRuleEvaluator;
 use App\Models\Record;
@@ -13,6 +14,7 @@ use App\Rules\Stage\AllowBackwardRule;
 use App\Rules\Stage\CooldownRule;
 use App\Rules\Stage\RequireCommentRule;
 use App\Rules\Stage\RequireFieldsRule;
+use App\Services\Records\SafeExpressionEvaluator;
 use App\Services\Stages\StageTransitionPolicy;
 use App\Support\Tenancy\TenantManager;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -28,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
 
         // DIP: depend on the contract; swap implementations freely.
         $this->app->bind(RecordRepositoryInterface::class, EloquentRecordRepository::class);
+
+        // Computed-field expression engine (sandboxed, hand-rolled). Swappable for
+        // symfony/expression-language behind the same contract without touching callers.
+        $this->app->bind(ComputedFieldEvaluator::class, SafeExpressionEvaluator::class);
 
         // Stage-transition rule evaluators (Strategy). New rule types: add the class + tag it here.
         $this->app->tag([

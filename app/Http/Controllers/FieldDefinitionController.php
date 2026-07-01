@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Contracts\ComputedFieldEvaluator;
 use App\Events\FieldDefinitionChanged;
 use App\Http\Requests\Fields\StoreFieldDefinitionRequest;
 use App\Http\Resources\FieldDefinitionResource;
@@ -11,14 +12,26 @@ use App\Models\EntityType;
 use App\Models\FieldDefinition;
 use App\Services\Records\FilterableFieldCap;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
 
 final class FieldDefinitionController extends Controller
 {
-    public function __construct(private readonly FilterableFieldCap $filterableCap) {}
+    public function __construct(
+        private readonly FilterableFieldCap $filterableCap,
+        private readonly ComputedFieldEvaluator $computed,
+    ) {}
 
     public function store(StoreFieldDefinitionRequest $request, string $entityTypeKey): JsonResponse
     {
         $type = EntityType::query()->where('key', $entityTypeKey)->firstOrFail();
+
+        // Computed fields: reject an unparseable expression up front (fast author feedback).
+        if ($request->string('type')->value() === 'computed') {
+            $expression = (string) data_get($request->input('ui'), 'expression', '');
+            if (! $this->computed->parses($expression)) {
+                throw ValidationException::withMessages(['ui.expression' => 'The computed-field expression is not valid.']);
+            }
+        }
 
         $isFilterable = $request->boolean('is_filterable');
         if ($isFilterable) {

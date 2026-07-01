@@ -291,6 +291,11 @@ class DemoEntitySeeder extends Seeder
             // mirrored into record_links + the locked contact_id column by RecordWriteService.
             ['key' => 'contact', 'type' => 'relation', 'label' => ['en' => 'Contact'],
                 'ui' => ['target_entity_type' => 'contact', 'canonical_column' => 'contact_id']],
+            // Phase 7b: a computed field — derived server-side on write from `budget`, then EAV-projected
+            // so it filters/sorts like a native field. Read-only end-to-end (never accepted from input).
+            ['key' => 'budget_band', 'type' => 'computed', 'label' => ['en' => 'Budget band'],
+                'ui' => ['expression' => 'budget >= 1000 ? "high" : "low"', 'result_type' => 'text'],
+                'is_filterable' => true, 'is_sortable' => true],
         ];
     }
 
@@ -330,7 +335,7 @@ class DemoEntitySeeder extends Seeder
                 ['type' => 'section', 'id' => 'details', 'props' => ['title' => ['en' => 'Details']],
                     'children' => array_map(
                         fn (string $f): array => ['type' => 'field', 'id' => "d-{$f}", 'binding' => ['field' => $f]],
-                        ['note', 'age', 'appointment_date', 'vip'],
+                        ['note', 'age', 'appointment_date', 'vip', 'budget_band'],
                     ),
                 ],
             ],
