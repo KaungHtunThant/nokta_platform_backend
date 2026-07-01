@@ -64,7 +64,13 @@ final class FieldProjector
             return $slots;
         }
 
-        return match ($def->type) {
+        // A computed field slots by its declared result_type (ui.result_type), so a derived value
+        // filters/sorts exactly like a native field of that type.
+        $type = $def->type === 'computed'
+            ? (is_string($def->ui['result_type'] ?? null) ? $def->ui['result_type'] : 'text')
+            : $def->type;
+
+        return match ($type) {
             'number', 'decimal', 'money' => [...$slots, 'value_number' => (float) $value],
             'bool', 'checkbox' => [...$slots, 'value_bool' => (bool) $value],
             'date', 'datetime' => [...$slots, 'value_date' => $this->toDate($value)],

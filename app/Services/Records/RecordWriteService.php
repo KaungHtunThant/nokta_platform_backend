@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Records;
 
+use App\Contracts\ComputedFieldEvaluator;
 use App\Contracts\RecordRepositoryInterface;
 use App\DTOs\RecordInput;
 use App\Models\EntityType;
@@ -26,6 +27,7 @@ final class RecordWriteService
         private readonly FieldGate $fieldGate,
         private readonly FieldProjector $projector,
         private readonly RecordLinkService $links,
+        private readonly ComputedFieldEvaluator $computed,
     ) {}
 
     public function create(EntityType $type, RecordInput $input, ?User $actor = null): Record
@@ -78,6 +80,11 @@ final class RecordWriteService
 
         $clean = $this->sanitizeData($defs, $data);
 
+        // Computed fields are derived server-side from the final field values and ALWAYS overwritten,
+        // so any client-sent value for a computed key is ignored (read-only by construction). Runs on
+        // both create and update so the value re-derives whenever its inputs change.
+        $clean = $this->applyComputed($defs, $clean);
+
         // Relation fields reference other records: reject cross-tenant / wrong-type targets before persist.
         $this->links->validate($defs, $clean);
 
@@ -106,6 +113,24 @@ final class RecordWriteService
             ->all();
 
         return array_intersect_key($data, array_flip($jsonKeys));
+    }
+
+    /**
+     * Derive and overwrite every computed field's value from the (already sanitized) bag.
+     *
+     * @param  Collection<int, FieldDefinition>  $defs
+     * @param  array<string, mixed>  $clean
+     * @return array<string, mixed>
+     */
+    private function applyComputed($defs, array $clean): array
+    {
+        foreach ($defs as $def) {
+            if ($def->type === 'computed') {
+                $clean[$def->key] = $this->computed->evaluate($def, $clean);
+            }
+        }
+
+        return $clean;
     }
 
     /**
